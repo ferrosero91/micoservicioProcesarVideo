@@ -105,6 +105,13 @@ class PromptRepository:
             print("Initializing default prompts in MongoDB...")
             collection.insert_many(list(self.DEFAULT_PROMPTS.values()))
             print("Default prompts initialized")
+        else:
+            # Update existing prompts and add new ones
+            for prompt_name, prompt_data in self.DEFAULT_PROMPTS.items():
+                existing = collection.find_one({"name": prompt_name})
+                if not existing:
+                    print(f"Adding new prompt: {prompt_name}")
+                    collection.insert_one(prompt_data)
     
     def get_prompt(self, prompt_name: str) -> Optional[str]:
         """Get prompt template by name"""
