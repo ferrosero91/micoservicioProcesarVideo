@@ -19,37 +19,60 @@ async def get_upload_form():
     html = """<!DOCTYPE html>
 <html>
 <head>
-    <title>Video Upload - JSON API</title>
+    <title>Video Profile Extractor API</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
         .info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .endpoint { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px; }
+        h2 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; }
+        .method { display: inline-block; padding: 3px 8px; border-radius: 3px; font-weight: bold; color: white; }
+        .post { background: #4CAF50; }
+        .get { background: #2196F3; }
     </style>
 </head>
 <body>
-    <h1>🎥 Video Profile Extraction</h1>
+    <h1>🎥 Video Profile Extractor API</h1>
+    
     <div class="info">
-        <h3>📋 This API returns JSON responses</h3>
-        <p>The application processes videos and returns:</p>
-        <pre>{
-  "cv_profile": "Professional profile text for CV",
-  "profile_data": {
-    "name": "Extracted name",
-    "profession": "Profession/occupation",
-    "experience": "Years and areas of experience",
-    "education": "Academic training",
-    "technologies": "Tools and technologies",
-    "languages": "Spoken languages",
-    "achievements": "Recognition and achievements",
-    "soft_skills": "Personal skills"
-  }
-}</pre>
+        <h3>📋 API for Job Recruitment Platform</h3>
+        <p>This API provides two main services:</p>
+        <ul>
+            <li><strong>Profile Extraction:</strong> Extract candidate information from video presentations</li>
+            <li><strong>Technical Test Generation:</strong> Generate customized technical tests based on candidate profiles</li>
+        </ul>
     </div>
-    <form action="/upload-video" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="video/*" required>
-        <button type="submit">📤 Upload and Process Video</button>
-    </form>
-    <p><em>Note: Use tools like Postman, curl or browser inspector to see the complete JSON response.</em></p>
+
+    <h2>1. Upload Video & Extract Profile</h2>
+    <div class="endpoint">
+        <p><span class="method post">POST</span> <code>/upload-video</code></p>
+        <form action="/upload-video" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="video/*" required>
+            <button type="submit">📤 Upload and Process Video</button>
+        </form>
+    </div>
+
+    <h2>2. Generate Technical Test</h2>
+    <div class="endpoint">
+        <p><span class="method post">POST</span> <code>/generate-technical-test</code></p>
+        <p>Send candidate profile to generate a customized technical test in Markdown format.</p>
+        <pre>{
+  "profession": "Software Engineer",
+  "technologies": "Python, FastAPI, PostgreSQL",
+  "experience": "3 years in backend development",
+  "education": "Computer Science degree"
+}</pre>
+        <p><strong>Response:</strong> Technical test in Markdown format ready to send to candidate.</p>
+    </div>
+
+    <h2>3. Manage Prompts</h2>
+    <div class="endpoint">
+        <p><span class="method get">GET</span> <code>/prompts</code> - List all prompts</p>
+        <p><span class="method get">GET</span> <code>/prompts/{name}</code> - Get specific prompt</p>
+    </div>
+
+    <p><em>💡 Tip: Use Postman, curl, or your application's HTTP client to interact with the API.</em></p>
+    <p><a href="/health" target="_blank">Check API Health</a> | <a href="/prompts" target="_blank">View Prompts</a></p>
 </body>
 </html>"""
     return HTMLResponse(content=html)
@@ -121,6 +144,36 @@ async def update_prompt(prompt_name: str, new_template: dict):
         raise HTTPException(status_code=500, detail="Failed to update prompt")
     
     return {"message": f"Prompt '{prompt_name}' updated successfully"}
+
+
+@app.post("/generate-technical-test")
+async def generate_technical_test(profile_data: dict):
+    """Generate technical test based on candidate profile"""
+    try:
+        # Validate required fields
+        required_fields = ["profession", "technologies"]
+        missing_fields = [field for field in required_fields if field not in profile_data]
+        
+        if missing_fields:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required fields: {', '.join(missing_fields)}"
+            )
+        
+        # Generate technical test
+        technical_test = ai_service.generate_technical_test(profile_data)
+        
+        return JSONResponse(content={
+            "technical_test_markdown": technical_test,
+            "profile_summary": {
+                "profession": profile_data.get("profession"),
+                "technologies": profile_data.get("technologies"),
+                "experience": profile_data.get("experience", "Not specified")
+            }
+        })
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

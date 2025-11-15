@@ -25,6 +25,11 @@ class AIService(ABC):
     def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
         """Generate professional CV profile"""
         pass
+    
+    @abstractmethod
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Generate technical test based on profile"""
+        pass
 
 
 class GroqService(AIService):
@@ -93,6 +98,30 @@ class GroqService(AIService):
         except Exception as e:
             raise Exception(f"Groq CV generation error: {str(e)}")
     
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Generate technical test using Groq"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "technical_test_generation",
+            profession=profile_data.get("profession", ""),
+            technologies=profile_data.get("technologies", ""),
+            experience=profile_data.get("experience", ""),
+            education=profile_data.get("education", "")
+        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=Config.GROQ_CHAT_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are an expert in creating technical assessments for job candidates. Generate comprehensive and fair technical tests in Spanish, formatted in Markdown."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.4,
+                max_tokens=2500
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"Groq technical test generation error: {str(e)}")
+    
     @staticmethod
     def _parse_json_response(response_text: str) -> dict:
         """Parse JSON from AI response"""
@@ -155,3 +184,19 @@ class GeminiService(AIService):
             return response.text.strip()
         except Exception as e:
             raise Exception(f"Gemini CV generation error: {str(e)}")
+    
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Generate technical test using Gemini"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "technical_test_generation",
+            profession=profile_data.get("profession", ""),
+            technologies=profile_data.get("technologies", ""),
+            experience=profile_data.get("experience", ""),
+            education=profile_data.get("education", "")
+        )
+        
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            raise Exception(f"Gemini technical test generation error: {str(e)}")

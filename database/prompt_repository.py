@@ -46,6 +46,45 @@ class PromptRepository:
                 "The profile must be concise, persuasive and suitable for a professional CV."
             ),
             "variables": ["transcription", "profile_data"]
+        },
+        "technical_test_generation": {
+            "name": "technical_test_generation",
+            "description": "Generate technical test for job candidate based on profile",
+            "template": (
+                "Generate a comprehensive technical test in Spanish for a job candidate with the following profile:\n\n"
+                "**Profession:** {profession}\n"
+                "**Technologies/Skills:** {technologies}\n"
+                "**Experience Level:** {experience}\n"
+                "**Education:** {education}\n\n"
+                "Create a technical assessment that includes:\n\n"
+                "1. **Theoretical Questions (30%)**: 5-7 multiple choice or short answer questions about fundamental concepts\n"
+                "2. **Practical Exercises (50%)**: 2-3 hands-on coding/problem-solving exercises appropriate to the role\n"
+                "3. **Case Study/Scenario (20%)**: 1 real-world scenario that tests analytical and decision-making skills\n\n"
+                "**Requirements:**\n"
+                "- Adjust difficulty based on experience level\n"
+                "- Focus on technologies and skills mentioned in the profile\n"
+                "- Include clear instructions and expected deliverables\n"
+                "- Provide estimated time for completion (total: 2-3 hours)\n"
+                "- Format the entire test in Markdown with proper headings, code blocks, and formatting\n"
+                "- Include a section at the end for evaluation criteria\n\n"
+                "**Format Structure:**\n"
+                "```markdown\n"
+                "# Prueba Técnica - [Profession]\n\n"
+                "## Información General\n"
+                "- Duración estimada: X horas\n"
+                "- Tecnologías evaluadas: [list]\n\n"
+                "## Parte 1: Preguntas Teóricas (30%)\n"
+                "...\n\n"
+                "## Parte 2: Ejercicios Prácticos (50%)\n"
+                "...\n\n"
+                "## Parte 3: Caso de Estudio (20%)\n"
+                "...\n\n"
+                "## Criterios de Evaluación\n"
+                "...\n"
+                "```\n\n"
+                "Generate a professional, fair, and comprehensive technical test that accurately assesses the candidate's capabilities."
+            ),
+            "variables": ["profession", "technologies", "experience", "education"]
         }
     }
     

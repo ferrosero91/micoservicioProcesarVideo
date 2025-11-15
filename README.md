@@ -120,6 +120,31 @@ Update a prompt template
 }
 ```
 
+### `POST /generate-technical-test`
+Generate technical test for job candidate
+
+**Request:**
+```json
+{
+  "profession": "Software Engineer",
+  "technologies": "Python, FastAPI, PostgreSQL",
+  "experience": "3 years in backend development",
+  "education": "Computer Science degree"
+}
+```
+
+**Response:**
+```json
+{
+  "technical_test_markdown": "# Prueba Técnica - Software Engineer\n\n...",
+  "profile_summary": {
+    "profession": "Software Engineer",
+    "technologies": "Python, FastAPI, PostgreSQL",
+    "experience": "3 years in backend development"
+  }
+}
+```
+
 ## Environment Variables
 
 ```env
@@ -167,8 +192,26 @@ PORT=9000
 ### 4. Deploy
 Click **Deploy** and wait 5-10 minutes.
 
-## Prompt Management
+## Use Cases
 
+### 1. Extract Profile from Video
+Upload a video presentation to extract candidate profile information.
+
+### 2. Generate Technical Test
+Companies can generate customized technical tests based on candidate profiles.
+
+```bash
+curl -X POST http://localhost:9000/generate-technical-test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "profession": "Software Engineer",
+    "technologies": "Python, FastAPI, PostgreSQL",
+    "experience": "3 years in backend development",
+    "education": "Computer Science degree"
+  }'
+```
+
+### 3. Manage Prompts
 Prompts are stored in MongoDB and can be updated via API:
 
 ```bash
@@ -176,9 +219,7 @@ Prompts are stored in MongoDB and can be updated via API:
 curl http://localhost:9000/prompts
 
 # Update prompt
-curl -X PUT http://localhost:9000/prompts/profile_extraction \
+curl -X PUT http://localhost:9000/prompts/technical_test_generation \
   -H "Content-Type: application/json" \
   -d '{"template": "Your new prompt with {variables}"}'
 ```
-
-If MongoDB is unavailable, the system uses default prompts from code.
