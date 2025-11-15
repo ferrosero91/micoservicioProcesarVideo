@@ -22,23 +22,55 @@ The application follows Object-Oriented Programming principles with clear separa
 │   ├── ai_service.py         # AI service implementations (Groq, Gemini)
 │   ├── ai_factory.py         # Factory pattern for AI service creation
 │   └── video_processor.py    # Video processing and audio extraction
+├── database/
+│   ├── __init__.py           # Database exports
+│   ├── mongodb.py            # MongoDB client singleton
+│   └── prompt_repository.py  # Prompt management repository
+├── docker-compose.yml         # Docker Compose configuration
+├── Dockerfile                 # Docker image definition
+└── COOLIFY_DEPLOYMENT.md      # Complete Coolify deployment guide
 ```
 
-## Installation
+## Quick Start
 
-1. Install dependencies:
+### Local Development with Docker Compose
+
 ```bash
+# Clone repository
+git clone https://github.com/ferrosero91/micoservicioProcesarVideo.git
+cd micoservicioProcesarVideo
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start services
+docker-compose up -d
+
+# Access API
+open http://localhost:9000
+```
+
+### Local Development without Docker
+
+```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-2. Set environment variables in `.env`:
-```env
-GROQ_API_KEY=your_groq_api_key
-GEMINI_API_KEY=your_gemini_api_key
-```
+# Configure .env (leave MongoDB credentials empty for local)
+GROQ_API_KEY=your_key
+GEMINI_API_KEY=your_key
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_USERNAME=
+MONGODB_PASSWORD=
 
-3. Run the application:
-```bash
+# Start MongoDB
+net start MongoDB  # Windows
+# or
+sudo systemctl start mongod  # Linux/Mac
+
+# Run application
 python main.py
 ```
 
@@ -72,32 +104,81 @@ Process video and extract profile
 ### `GET /health`
 Health check endpoint
 
-## Configuration
+### `GET /prompts`
+List all available prompts
 
-All configuration is centralized in `config.py`:
+### `GET /prompts/{prompt_name}`
+Get a specific prompt template
 
-- `GROQ_API_KEY`: Groq API key for transcription
-- `GEMINI_API_KEY`: Gemini API key (fallback)
-- `PORT`: Server port (default: 9000)
-- `AUDIO_SAMPLE_RATE`: Audio sample rate (default: 16000)
-- `AUDIO_CHANNELS`: Audio channels (default: 1)
+### `PUT /prompts/{prompt_name}`
+Update a prompt template
 
-## Deployment
-
-### Docker
-```bash
-docker build -t video-profile-extractor .
-docker run -p 9000:9000 -e GROQ_API_KEY=xxx -e GEMINI_API_KEY=xxx video-profile-extractor
+**Request:**
+```json
+{
+  "template": "Your new prompt template with {variables}"
+}
 ```
 
-### Render
-Configure environment variables in Render dashboard:
-- `GROQ_API_KEY`
-- `GEMINI_API_KEY`
+## Environment Variables
 
-## Design Patterns
+```env
+# AI Service Keys (Required)
+GROQ_API_KEY=your_groq_key
+GEMINI_API_KEY=your_gemini_key
 
-- **Factory Pattern**: `AIServiceFactory` creates appropriate AI service instances
-- **Strategy Pattern**: `AIService` abstract class with multiple implementations
-- **Dependency Injection**: Services injected at application startup
-- **Single Responsibility**: Each class has one clear purpose
+# MongoDB Configuration
+MONGODB_HOST=localhost              # or Coolify internal host
+MONGODB_PORT=27017
+MONGODB_USERNAME=videoprofile       # empty for local without auth
+MONGODB_PASSWORD=videoprofile       # empty for local without auth
+MONGODB_DATABASE=video_profile_extractor
+MONGODB_AUTH_DATABASE=admin
+
+# Server
+PORT=9000
+```
+
+## Deployment to Coolify
+
+### 1. Create MongoDB Database
+- In Coolify: **+ New Resource** → **Database** → **MongoDB**
+- Username: `videoprofile`, Password: `videoprofile`, Database: `video_profile_extractor`
+- Copy the internal host (e.g., `pwsggksos88cokc40s04088w`)
+
+### 2. Create API Resource
+- **+ New Resource** → **Docker Compose**
+- Repository: `https://github.com/ferrosero91/micoservicioProcesarVideo.git`
+- Branch: `master`
+
+### 3. Set Environment Variables
+```env
+GROQ_API_KEY=your_key
+GEMINI_API_KEY=your_key
+MONGODB_HOST=pwsggksos88cokc40s04088w  # from step 1
+MONGODB_PORT=27017
+MONGODB_USERNAME=videoprofile
+MONGODB_PASSWORD=videoprofile
+MONGODB_DATABASE=video_profile_extractor
+MONGODB_AUTH_DATABASE=admin
+PORT=9000
+```
+
+### 4. Deploy
+Click **Deploy** and wait 5-10 minutes.
+
+## Prompt Management
+
+Prompts are stored in MongoDB and can be updated via API:
+
+```bash
+# List prompts
+curl http://localhost:9000/prompts
+
+# Update prompt
+curl -X PUT http://localhost:9000/prompts/profile_extraction \
+  -H "Content-Type: application/json" \
+  -d '{"template": "Your new prompt with {variables}"}'
+```
+
+If MongoDB is unavailable, the system uses default prompts from code.

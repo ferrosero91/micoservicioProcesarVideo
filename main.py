@@ -84,6 +84,45 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/prompts")
+async def list_prompts():
+    """List all available prompts"""
+    from database import PromptRepository
+    prompt_repo = PromptRepository()
+    prompts = prompt_repo.list_prompts()
+    return {"prompts": prompts}
+
+
+@app.get("/prompts/{prompt_name}")
+async def get_prompt(prompt_name: str):
+    """Get a specific prompt template"""
+    from database import PromptRepository
+    prompt_repo = PromptRepository()
+    template = prompt_repo.get_prompt(prompt_name)
+    
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Prompt '{prompt_name}' not found")
+    
+    return {"name": prompt_name, "template": template}
+
+
+@app.put("/prompts/{prompt_name}")
+async def update_prompt(prompt_name: str, new_template: dict):
+    """Update a prompt template"""
+    from database import PromptRepository
+    prompt_repo = PromptRepository()
+    
+    if "template" not in new_template:
+        raise HTTPException(status_code=400, detail="Field 'template' is required")
+    
+    success = prompt_repo.update_prompt(prompt_name, new_template["template"])
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update prompt")
+    
+    return {"message": f"Prompt '{prompt_name}' updated successfully"}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=Config.HOST, port=Config.PORT)

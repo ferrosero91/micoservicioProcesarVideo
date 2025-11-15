@@ -4,16 +4,18 @@ __pycache__/
 *$py.class
 *.so
 .Python
-
-# Virtual environments
 venv/
 ENV/
 env/
 .venv/
 
-# Environment variables
+# Environment
 .env
 .env.local
+
+# Git
+.git/
+.gitignore
 
 # IDE
 .vscode/
@@ -21,17 +23,20 @@ env/
 *.swp
 *.swo
 
+# Documentation
+*.md
+!README.md
+
+# Tests
+tests/
+test_*.py
+
+# Temporary files
+*.log
+*.tmp
+temp/
+tmp/
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-
-# MongoDB data (local development)
-mongodb_data/

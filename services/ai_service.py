@@ -2,10 +2,14 @@ import json
 import re
 from abc import ABC, abstractmethod
 from config import Config
+from database import PromptRepository
 
 
 class AIService(ABC):
     """Abstract base class for AI services"""
+    
+    def __init__(self):
+        self.prompt_repo = PromptRepository()
     
     @abstractmethod
     def transcribe_audio(self, audio_path: str) -> str:
@@ -27,6 +31,7 @@ class GroqService(AIService):
     """Groq AI service implementation"""
     
     def __init__(self):
+        super().__init__()
         from groq import Groq
         self.client = Groq(api_key=Config.GROQ_API_KEY)
         print("Groq AI service initialized")
@@ -48,7 +53,7 @@ class GroqService(AIService):
     
     def extract_profile(self, text: str) -> dict:
         """Extract profile information using Groq"""
-        prompt = self._build_extraction_prompt(text)
+        prompt = self.prompt_repo.get_prompt_with_variables("profile_extraction", text=text)
         
         try:
             response = self.client.chat.completions.create(
@@ -68,7 +73,11 @@ class GroqService(AIService):
     
     def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
         """Generate CV profile using Groq"""
-        prompt = self._build_cv_prompt(transcription, profile_data)
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "cv_generation",
+            transcription=transcription,
+            profile_data=json.dumps(profile_data, ensure_ascii=False)
+        )
         
         try:
             response = self.client.chat.completions.create(
@@ -85,45 +94,6 @@ class GroqService(AIService):
             raise Exception(f"Groq CV generation error: {str(e)}")
     
     @staticmethod
-    def _build_extraction_prompt(text: str) -> str:
-        """Build prompt for profile extraction"""
-        return (
-            "Analyze the following transcribed text from a personal presentation video and extract profile information.\n\n"
-            "Return ONLY a valid JSON object with these fields:\n"
-            "- name: Person's name\n"
-            "- profession: Current occupation, position or specialty\n"
-            "- experience: Areas or topics with work practice or applied knowledge\n"
-            "- education: Degrees, studies or academic training. If not explicitly mentioned, infer logically from profession\n"
-            "- technologies: Tools, software, languages or specific techniques mentioned\n"
-            "- languages: List of spoken or understood languages\n"
-            "- achievements: Recognition, milestones or relevant contributions\n"
-            "- soft_skills: Social or personal skills\n\n"
-            "If any field is not present and cannot be inferred, use 'Not specified'.\n\n"
-            f"Text to analyze:\n{text}\n\n"
-            "Respond ONLY with JSON, no additional text."
-        )
-    
-    @staticmethod
-    def _build_cv_prompt(transcription: str, profile_data: dict) -> str:
-        """Build prompt for CV profile generation"""
-        return (
-            "Based on the following transcription and extracted profile information, "
-            "write an optimized professional profile for a CV in the style of concise and impactful executive summaries. "
-            "The profile must be in Spanish, professional and formal, written in impersonal third person (without mentioning the name at the beginning), "
-            "structured in short and focused paragraphs. Follow this approximate structure: "
-            "- First paragraph: Profession and key experience, highlighting specialties and areas of expertise. "
-            "- Second paragraph: Academic training and technical knowledge/technologies. "
-            "- Third paragraph: Capabilities, languages and soft skills. "
-            "- Fourth paragraph: Recognition, achievements and professional commitment. "
-            "Use impactful phrases, persuasive language and avoid redundancies. Integrate all relevant information coherently.\n\n"
-            f"Transcription: {transcription}\n\n"
-            f"Extracted information: {json.dumps(profile_data, ensure_ascii=False)}\n\n"
-            "If any data is unavailable or 'Not specified', integrate it subtly or omit it if it doesn't add value. "
-            "Don't use Markdown format, placeholders or additional text outside the profile. "
-            "The profile must be concise, persuasive and suitable for a professional CV."
-        )
-    
-    @staticmethod
     def _parse_json_response(response_text: str) -> dict:
         """Parse JSON from AI response"""
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
@@ -136,6 +106,7 @@ class GeminiService(AIService):
     """Gemini AI service implementation"""
     
     def __init__(self):
+        super().__init__()
         import google.generativeai as genai
         genai.configure(api_key=Config.GEMINI_API_KEY)
         
@@ -162,7 +133,7 @@ class GeminiService(AIService):
     
     def extract_profile(self, text: str) -> dict:
         """Extract profile information using Gemini"""
-        prompt = GroqService._build_extraction_prompt(text)
+        prompt = self.prompt_repo.get_prompt_with_variables("profile_extraction", text=text)
         
         try:
             response = self.model.generate_content(prompt)
@@ -173,7 +144,11 @@ class GeminiService(AIService):
     
     def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
         """Generate CV profile using Gemini"""
-        prompt = GroqService._build_cv_prompt(transcription, profile_data)
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "cv_generation",
+            transcription=transcription,
+            profile_data=json.dumps(profile_data, ensure_ascii=False)
+        )
         
         try:
             response = self.model.generate_content(prompt)

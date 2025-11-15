@@ -21,6 +21,14 @@ class Config:
     GEMINI_MODEL = "gemini-2.0-flash"
     GEMINI_FALLBACK_MODEL = "gemini-pro"
     
+    # MongoDB settings
+    MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")
+    MONGODB_PORT = os.getenv("MONGODB_PORT", "27017")
+    MONGODB_USERNAME = os.getenv("MONGODB_USERNAME", "")
+    MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD", "")
+    MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "video_profile_extractor")
+    MONGODB_AUTH_DATABASE = os.getenv("MONGODB_AUTH_DATABASE", "admin")
+    
     @classmethod
     def validate(cls):
         """Validate required configuration"""
