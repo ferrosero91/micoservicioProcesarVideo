@@ -148,9 +148,11 @@ Generate technical test for job candidate
 ## Environment Variables
 
 ```env
-# AI Service Keys (Required)
+# AI Service Keys (At least one required)
+# Fallback order: Groq → Gemini → Z.AI
 GROQ_API_KEY=your_groq_key
 GEMINI_API_KEY=your_gemini_key
+ZAI_API_KEY=your_zai_key
 
 # MongoDB Configuration
 MONGODB_HOST=localhost              # or Coolify internal host
@@ -163,6 +165,11 @@ MONGODB_AUTH_DATABASE=admin
 # Server
 PORT=9000
 ```
+
+**AI Service Fallback:**
+- The system tries services in order: Groq → Gemini → Z.AI
+- If one fails, it automatically uses the next available service
+- At least one API key must be configured
 
 ## Deployment to Coolify
 
@@ -180,6 +187,7 @@ PORT=9000
 ```env
 GROQ_API_KEY=your_key
 GEMINI_API_KEY=your_key
+ZAI_API_KEY=your_key
 MONGODB_HOST=pwsggksos88cokc40s04088w  # from step 1
 MONGODB_PORT=27017
 MONGODB_USERNAME=videoprofile
@@ -188,6 +196,8 @@ MONGODB_DATABASE=video_profile_extractor
 MONGODB_AUTH_DATABASE=admin
 PORT=9000
 ```
+
+**Note:** At least one AI service key is required. The system will use them in order: Groq → Gemini → Z.AI
 
 ### 4. Deploy
 Click **Deploy** and wait 5-10 minutes.
