@@ -281,3 +281,88 @@ class HuggingFaceService(AIService):
             return response.choices[0].message.content.strip()
         except Exception as e:
             raise Exception(f"Hugging Face technical test generation error: {str(e)}")
+
+
+
+class OpenRouterService(AIService):
+    """OpenRouter AI service implementation (OpenAI-compatible)"""
+    
+    def __init__(self):
+        super().__init__()
+        from openai import OpenAI
+        self.client = OpenAI(
+            api_key=Config.OPENROUTER_API_KEY,
+            base_url=Config.OPENROUTER_BASE_URL
+        )
+        self.model = Config.OPENROUTER_MODEL
+        print(f"OpenRouter service initialized with {self.model}")
+    
+    def transcribe_audio(self, audio_path: str) -> str:
+        """OpenRouter doesn't support audio transcription"""
+        raise NotImplementedError("OpenRouter service does not support audio transcription. Use Groq or Gemini for this feature.")
+    
+    def extract_profile(self, text: str) -> dict:
+        """Extract profile information using OpenRouter"""
+        prompt = self.prompt_repo.get_prompt_with_variables("profile_extraction", text=text)
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. Always respond with valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=1000
+            )
+            
+            response_text = response.choices[0].message.content.strip()
+            return GroqService._parse_json_response(response_text)
+        except Exception as e:
+            raise Exception(f"OpenRouter profile extraction error: {str(e)}")
+    
+    def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
+        """Generate CV profile using OpenRouter"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "cv_generation",
+            transcription=transcription,
+            profile_data=json.dumps(profile_data, ensure_ascii=False)
+        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an assistant specialized in creating professional CV profiles. Generate persuasive and professional texts in Spanish."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=1500
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"OpenRouter CV generation error: {str(e)}")
+    
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Generate technical test using OpenRouter"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "technical_test_generation",
+            profession=profile_data.get("profession", ""),
+            technologies=profile_data.get("technologies", ""),
+            experience=profile_data.get("experience", ""),
+            education=profile_data.get("education", "")
+        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert in creating technical assessments for job candidates. Generate comprehensive and fair technical tests in Spanish, formatted in Markdown."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.4,
+                max_tokens=2500
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"OpenRouter technical test generation error: {str(e)}")

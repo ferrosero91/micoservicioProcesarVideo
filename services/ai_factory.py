@@ -1,6 +1,6 @@
 from typing import Optional, Dict
 from config import Config
-from .ai_service import AIService, GroqService, GeminiService, HuggingFaceService
+from .ai_service import AIService, GroqService, GeminiService, HuggingFaceService, OpenRouterService
 from .load_balancer import AILoadBalancer
 
 
@@ -40,6 +40,10 @@ class AIServiceFactory:
         if gemini:
             services['gemini'] = gemini
         
+        openrouter = AIServiceFactory._try_create_openrouter()
+        if openrouter:
+            services['openrouter'] = openrouter
+        
         hf = AIServiceFactory._try_create_huggingface()
         if hf:
             services['huggingface'] = hf
@@ -74,6 +78,21 @@ class AIServiceFactory:
             return None
         except Exception as e:
             print(f"Warning: Failed to initialize Gemini service: {e}")
+            return None
+    
+    @staticmethod
+    def _try_create_openrouter() -> Optional[AIService]:
+        """Try to create OpenRouter service"""
+        if not Config.OPENROUTER_API_KEY:
+            return None
+        
+        try:
+            return OpenRouterService()
+        except ImportError:
+            print("Warning: OpenAI library not installed. Install with: pip install openai")
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to initialize OpenRouter service: {e}")
             return None
     
     @staticmethod
