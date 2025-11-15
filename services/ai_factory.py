@@ -1,30 +1,50 @@
-from typing import Optional
+from typing import Optional, Dict
 from config import Config
 from .ai_service import AIService, GroqService, GeminiService, HuggingFaceService
+from .load_balancer import AILoadBalancer
 
 
 class AIServiceFactory:
-    """Factory for creating AI service instances with fallback support"""
+    """Factory for creating AI service instances with load balancing support"""
     
     @staticmethod
     def create_service() -> AIService:
-        """Create AI service with automatic fallback: Groq → Gemini → Hugging Face"""
-        # Try Groq first (best for transcription)
-        groq_service = AIServiceFactory._try_create_groq()
-        if groq_service:
-            return groq_service
+        """Create AI service with automatic fallback (legacy method)"""
+        services = AIServiceFactory.create_all_services()
+        if not services:
+            raise RuntimeError("No AI service available. Check your API keys and dependencies.")
         
-        # Try Gemini second (powerful and free)
-        gemini_service = AIServiceFactory._try_create_gemini()
-        if gemini_service:
-            return gemini_service
+        # Return first available service for backward compatibility
+        return list(services.values())[0]
+    
+    @staticmethod
+    def create_load_balancer() -> AILoadBalancer:
+        """Create load balancer with all available services"""
+        services = AIServiceFactory.create_all_services()
+        if not services:
+            raise RuntimeError("No AI service available. Check your API keys and dependencies.")
         
-        # Try Hugging Face third (free, many models)
-        hf_service = AIServiceFactory._try_create_huggingface()
-        if hf_service:
-            return hf_service
+        return AILoadBalancer(services)
+    
+    @staticmethod
+    def create_all_services() -> Dict[str, AIService]:
+        """Create all available AI services"""
+        services = {}
         
-        raise RuntimeError("No AI service available. Check your API keys and dependencies.")
+        # Try to create each service
+        groq = AIServiceFactory._try_create_groq()
+        if groq:
+            services['groq'] = groq
+        
+        gemini = AIServiceFactory._try_create_gemini()
+        if gemini:
+            services['gemini'] = gemini
+        
+        hf = AIServiceFactory._try_create_huggingface()
+        if hf:
+            services['huggingface'] = hf
+        
+        return services
     
     @staticmethod
     def _try_create_groq() -> Optional[AIService]:

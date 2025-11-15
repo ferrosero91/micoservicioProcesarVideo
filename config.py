@@ -9,6 +9,7 @@ class Config:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     PORT = int(os.getenv("PORT", 9000))
     HOST = "0.0.0.0"
     
@@ -22,6 +23,8 @@ class Config:
     GEMINI_MODEL = "gemini-2.0-flash"
     GEMINI_FALLBACK_MODEL = "gemini-pro"
     HUGGINGFACE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"
+    OPENROUTER_MODEL = "google/gemma-2-9b-it:free"
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     
     # MongoDB settings
     MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")
@@ -34,5 +37,5 @@ class Config:
     @classmethod
     def validate(cls):
         """Validate required configuration"""
-        if not cls.GROQ_API_KEY and not cls.GEMINI_API_KEY and not cls.HUGGINGFACE_API_KEY:
-            raise ValueError("At least one API key (GROQ_API_KEY, GEMINI_API_KEY, or HUGGINGFACE_API_KEY) must be set")
+        if not any([cls.GROQ_API_KEY, cls.GEMINI_API_KEY, cls.HUGGINGFACE_API_KEY, cls.OPENROUTER_API_KEY]):
+            raise ValueError("At least one API key must be set")

@@ -11,7 +11,10 @@ video_processor = VideoProcessor(
     sample_rate=Config.AUDIO_SAMPLE_RATE,
     channels=Config.AUDIO_CHANNELS
 )
-ai_service = AIServiceFactory.create_service()
+
+# Use load balancer for intelligent task distribution
+ai_load_balancer = AIServiceFactory.create_load_balancer()
+print(f"[Load Balancer] Initialized with {len(ai_load_balancer.services)} services")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -84,10 +87,17 @@ async def upload_video(file: UploadFile = File(...)):
     audio_path = None
     
     try:
+        # Process video and extract audio
         video_path, audio_path = video_processor.process_video(file)
-        transcription = ai_service.transcribe_audio(audio_path)
-        profile_data = ai_service.extract_profile(transcription)
-        cv_profile = ai_service.generate_cv_profile(transcription, profile_data)
+        
+        # Transcribe audio (Groq - best for transcription)
+        transcription = ai_load_balancer.transcribe_audio(audio_path)
+        
+        # Extract profile data (Groq - fast and accurate)
+        profile_data = ai_load_balancer.extract_profile(transcription)
+        
+        # Generate CV profile (Gemini - high quality text)
+        cv_profile = ai_load_balancer.generate_cv_profile(transcription, profile_data)
         
         return JSONResponse(content={
             "cv_profile": cv_profile,
@@ -160,8 +170,8 @@ async def generate_technical_test(profile_data: dict):
                 detail=f"Missing required fields: {', '.join(missing_fields)}"
             )
         
-        # Generate technical test
-        technical_test = ai_service.generate_technical_test(profile_data)
+        # Generate technical test (Hugging Face - free and good quality)
+        technical_test = ai_load_balancer.generate_technical_test(profile_data)
         
         return JSONResponse(content={
             "technical_test_markdown": technical_test,

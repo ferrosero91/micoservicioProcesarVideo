@@ -1,0 +1,92 @@
+"""
+Load Balancer for AI Services
+Distributes tasks to specialized services for optimal performance
+"""
+from typing import Dict
+from config import Config
+from .ai_service import AIService
+
+
+class AILoadBalancer:
+    """
+    Intelligent load balancer that routes requests to specialized AI services
+    
+    Strategy:
+    - Video Processing (transcription + profile extraction): Groq (fast transcription)
+    - Technical Test Generation: Hugging Face (free, good quality)
+    - CV Profile Generation: Gemini (high quality text)
+    - Fallback: Any available service
+    """
+    
+    def __init__(self, services: Dict[str, AIService]):
+        """
+        Initialize load balancer with available services
+        
+        Args:
+            services: Dictionary of service_name -> service_instance
+        """
+        self.services = services
+        self.primary_services = {
+            'transcription': 'groq',        # Best for audio transcription
+            'profile_extraction': 'groq',   # Fast and accurate
+            'cv_generation': 'gemini',      # High quality text generation
+            'technical_test': 'huggingface' # Free and good quality
+        }
+        self.fallback_order = ['groq', 'gemini', 'huggingface']
+    
+    def get_service_for_task(self, task: str) -> AIService:
+        """
+        Get the best service for a specific task
+        
+        Args:
+            task: One of 'transcription', 'profile_extraction', 'cv_generation', 'technical_test'
+        
+        Returns:
+            AIService instance
+        """
+        # Try primary service for this task
+        primary_service_name = self.primary_services.get(task)
+        if primary_service_name and primary_service_name in self.services:
+            return self.services[primary_service_name]
+        
+        # Fallback to first available service
+        for service_name in self.fallback_order:
+            if service_name in self.services:
+                service = self.services[service_name]
+                
+                # Check if service supports the task
+                if task == 'transcription':
+                    try:
+                        # Only Groq and Gemini support transcription
+                        if service_name in ['groq', 'gemini']:
+                            return service
+                    except:
+                        continue
+                else:
+                    return service
+        
+        raise RuntimeError(f"No service available for task: {task}")
+    
+    def transcribe_audio(self, audio_path: str) -> str:
+        """Route transcription to best service"""
+        service = self.get_service_for_task('transcription')
+        print(f"[Load Balancer] Using {type(service).__name__} for transcription")
+        return service.transcribe_audio(audio_path)
+    
+    def extract_profile(self, text: str) -> dict:
+        """Route profile extraction to best service"""
+        service = self.get_service_for_task('profile_extraction')
+        print(f"[Load Balancer] Using {type(service).__name__} for profile extraction")
+        return service.extract_profile(text)
+    
+    def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
+        """Route CV generation to best service"""
+        service = self.get_service_for_task('cv_generation')
+        print(f"[Load Balancer] Using {type(service).__name__} for CV generation")
+        return service.generate_cv_profile(transcription, profile_data)
+    
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Route technical test generation to best service"""
+        service = self.get_service_for_task('technical_test')
+        print(f"[Load Balancer] Using {type(service).__name__} for technical test generation")
+        return service.generate_technical_test(profile_data)
