@@ -121,7 +121,9 @@ Update a prompt template
 ```
 
 ### `POST /generate-technical-test`
-Generate technical test for job candidate
+Generate technical test for selected candidates (Company use)
+
+**Use Case:** After reviewing candidate profiles, companies use this endpoint to generate customized technical tests based on job requirements.
 
 **Request:**
 ```json
@@ -144,6 +146,8 @@ Generate technical test for job candidate
   }
 }
 ```
+
+**Note:** The test is generated based on job requirements, not candidate profile. This allows companies to create standardized tests for specific positions.
 
 ## Environment Variables
 
@@ -202,13 +206,38 @@ PORT=9000
 ### 4. Deploy
 Click **Deploy** and wait 5-10 minutes.
 
-## Use Cases
+## Workflow
 
-### 1. Extract Profile from Video
-Upload a video presentation to extract candidate profile information.
+### Complete Recruitment Process
 
-### 2. Generate Technical Test
-Companies can generate customized technical tests based on candidate profiles.
+```
+1. Candidate → Uploads video presentation
+   ↓
+2. API → Extracts profile + Generates CV
+   ↓
+3. Company → Reviews profiles
+   ↓
+4. Company → Selects candidates
+   ↓
+5. Company → Generates technical test (this API)
+   ↓
+6. Candidate → Completes technical test
+   ↓
+7. Company → Evaluates and makes hiring decision
+```
+
+### Use Cases
+
+#### 1. Candidate: Upload Video Presentation
+```bash
+curl -X POST http://localhost:9000/upload-video \
+  -F "file=@presentation.mp4"
+```
+
+**Response:** CV profile + Extracted data
+
+#### 2. Company: Generate Technical Test for Selected Candidates
+After reviewing profiles, companies generate customized tests:
 
 ```bash
 curl -X POST http://localhost:9000/generate-technical-test \
@@ -221,9 +250,9 @@ curl -X POST http://localhost:9000/generate-technical-test \
   }'
 ```
 
-### 3. Manage Prompts
-Prompts are stored in MongoDB and can be updated via API:
+**Response:** Technical test in Markdown format
 
+#### 3. Admin: Manage Prompts
 ```bash
 # List prompts
 curl http://localhost:9000/prompts

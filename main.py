@@ -39,11 +39,13 @@ async def get_upload_form():
     
     <div class="info">
         <h3>📋 API for Job Recruitment Platform</h3>
-        <p>This API provides two main services:</p>
-        <ul>
-            <li><strong>Profile Extraction:</strong> Extract candidate information from video presentations</li>
-            <li><strong>Technical Test Generation:</strong> Generate customized technical tests based on candidate profiles</li>
-        </ul>
+        <p><strong>Workflow:</strong></p>
+        <ol>
+            <li><strong>Candidate:</strong> Uploads video presentation</li>
+            <li><strong>API:</strong> Extracts profile and generates professional CV</li>
+            <li><strong>Company:</strong> Reviews profiles and selects candidates</li>
+            <li><strong>Company:</strong> Generates customized technical test for selected candidates</li>
+        </ol>
     </div>
 
     <h2>1. Upload Video & Extract Profile</h2>
@@ -55,10 +57,10 @@ async def get_upload_form():
         </form>
     </div>
 
-    <h2>2. Generate Technical Test</h2>
+    <h2>2. Generate Technical Test (For Companies)</h2>
     <div class="endpoint">
         <p><span class="method post">POST</span> <code>/generate-technical-test</code></p>
-        <p>Send candidate profile to generate a customized technical test in Markdown format.</p>
+        <p><strong>Use Case:</strong> Company generates customized technical test for selected candidates based on job requirements.</p>
         <pre>{
   "profession": "Software Engineer",
   "technologies": "Python, FastAPI, PostgreSQL",
@@ -66,6 +68,7 @@ async def get_upload_form():
   "education": "Computer Science degree"
 }</pre>
         <p><strong>Response:</strong> Technical test in Markdown format ready to send to candidate.</p>
+        <p><em>Note: This endpoint is used by companies after reviewing candidate profiles.</em></p>
     </div>
 
     <h2>3. Manage Prompts</h2>
@@ -158,7 +161,18 @@ async def update_prompt(prompt_name: str, new_template: dict):
 
 @app.post("/generate-technical-test")
 async def generate_technical_test(profile_data: dict):
-    """Generate technical test based on candidate profile"""
+    """
+    Generate technical test based on job requirements
+    
+    This endpoint is used by companies to generate customized technical tests
+    for candidates who have been selected after the initial profile review.
+    
+    The test is generated based on:
+    - Job position requirements (profession)
+    - Required technologies and skills
+    - Expected experience level
+    - Educational background
+    """
     try:
         # Validate required fields
         required_fields = ["profession", "technologies"]
@@ -170,7 +184,7 @@ async def generate_technical_test(profile_data: dict):
                 detail=f"Missing required fields: {', '.join(missing_fields)}"
             )
         
-        # Generate technical test (Hugging Face - free and good quality)
+        # Generate technical test (OpenRouter/Hugging Face - specialized for this task)
         technical_test = ai_load_balancer.generate_technical_test(profile_data)
         
         return JSONResponse(content={
