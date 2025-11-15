@@ -200,3 +200,84 @@ class GeminiService(AIService):
             return response.text.strip()
         except Exception as e:
             raise Exception(f"Gemini technical test generation error: {str(e)}")
+
+
+class HuggingFaceService(AIService):
+    """Hugging Face Inference API service implementation"""
+    
+    def __init__(self):
+        super().__init__()
+        from huggingface_hub import InferenceClient
+        self.client = InferenceClient(token=Config.HUGGINGFACE_API_KEY)
+        self.model = Config.HUGGINGFACE_MODEL
+        print(f"Hugging Face service initialized with {self.model}")
+    
+    def transcribe_audio(self, audio_path: str) -> str:
+        """Hugging Face doesn't support audio transcription in free tier"""
+        raise NotImplementedError("Hugging Face free tier does not support audio transcription. Use Groq or Gemini for this feature.")
+    
+    def extract_profile(self, text: str) -> dict:
+        """Extract profile information using Hugging Face"""
+        prompt = self.prompt_repo.get_prompt_with_variables("profile_extraction", text=text)
+        
+        try:
+            response = self.client.chat_completion(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. Always respond with valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=1000
+            )
+            
+            response_text = response.choices[0].message.content.strip()
+            return GroqService._parse_json_response(response_text)
+        except Exception as e:
+            raise Exception(f"Hugging Face profile extraction error: {str(e)}")
+    
+    def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
+        """Generate CV profile using Hugging Face"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "cv_generation",
+            transcription=transcription,
+            profile_data=json.dumps(profile_data, ensure_ascii=False)
+        )
+        
+        try:
+            response = self.client.chat_completion(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an assistant specialized in creating professional CV profiles. Generate persuasive and professional texts in Spanish."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=1500
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"Hugging Face CV generation error: {str(e)}")
+    
+    def generate_technical_test(self, profile_data: dict) -> str:
+        """Generate technical test using Hugging Face"""
+        prompt = self.prompt_repo.get_prompt_with_variables(
+            "technical_test_generation",
+            profession=profile_data.get("profession", ""),
+            technologies=profile_data.get("technologies", ""),
+            experience=profile_data.get("experience", ""),
+            education=profile_data.get("education", "")
+        )
+        
+        try:
+            response = self.client.chat_completion(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert in creating technical assessments for job candidates. Generate comprehensive and fair technical tests in Spanish, formatted in Markdown."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.4,
+                max_tokens=2500
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"Hugging Face technical test generation error: {str(e)}")

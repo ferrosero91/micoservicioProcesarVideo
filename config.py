@@ -8,6 +8,7 @@ class Config:
     """Application configuration"""
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
     PORT = int(os.getenv("PORT", 9000))
     HOST = "0.0.0.0"
     
@@ -20,6 +21,7 @@ class Config:
     GROQ_CHAT_MODEL = "llama-3.1-8b-instant"
     GEMINI_MODEL = "gemini-2.0-flash"
     GEMINI_FALLBACK_MODEL = "gemini-pro"
+    HUGGINGFACE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"
     
     # MongoDB settings
     MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")
@@ -32,5 +34,5 @@ class Config:
     @classmethod
     def validate(cls):
         """Validate required configuration"""
-        if not cls.GROQ_API_KEY and not cls.GEMINI_API_KEY:
-            raise ValueError("At least one API key (GROQ_API_KEY or GEMINI_API_KEY) must be set")
+        if not cls.GROQ_API_KEY and not cls.GEMINI_API_KEY and not cls.HUGGINGFACE_API_KEY:
+            raise ValueError("At least one API key (GROQ_API_KEY, GEMINI_API_KEY, or HUGGINGFACE_API_KEY) must be set")

@@ -1,6 +1,6 @@
 from typing import Optional
 from config import Config
-from .ai_service import AIService, GroqService, GeminiService
+from .ai_service import AIService, GroqService, GeminiService, HuggingFaceService
 
 
 class AIServiceFactory:
@@ -8,14 +8,21 @@ class AIServiceFactory:
     
     @staticmethod
     def create_service() -> AIService:
-        """Create AI service with automatic fallback"""
-        primary_service = AIServiceFactory._try_create_groq()
-        if primary_service:
-            return primary_service
+        """Create AI service with automatic fallback: Groq → Gemini → Hugging Face"""
+        # Try Groq first (best for transcription)
+        groq_service = AIServiceFactory._try_create_groq()
+        if groq_service:
+            return groq_service
         
-        fallback_service = AIServiceFactory._try_create_gemini()
-        if fallback_service:
-            return fallback_service
+        # Try Gemini second (powerful and free)
+        gemini_service = AIServiceFactory._try_create_gemini()
+        if gemini_service:
+            return gemini_service
+        
+        # Try Hugging Face third (free, many models)
+        hf_service = AIServiceFactory._try_create_huggingface()
+        if hf_service:
+            return hf_service
         
         raise RuntimeError("No AI service available. Check your API keys and dependencies.")
     
@@ -47,4 +54,19 @@ class AIServiceFactory:
             return None
         except Exception as e:
             print(f"Warning: Failed to initialize Gemini service: {e}")
+            return None
+    
+    @staticmethod
+    def _try_create_huggingface() -> Optional[AIService]:
+        """Try to create Hugging Face service"""
+        if not Config.HUGGINGFACE_API_KEY:
+            return None
+        
+        try:
+            return HuggingFaceService()
+        except ImportError:
+            print("Warning: Hugging Face Hub library not installed. Install with: pip install huggingface_hub")
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to initialize Hugging Face service: {e}")
             return None
