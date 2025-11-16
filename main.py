@@ -189,6 +189,36 @@ async def update_prompt(prompt_name: str, new_template: dict):
     return {"message": f"Prompt '{prompt_name}' updated successfully"}
 
 
+@app.post("/prompts/reset")
+async def reset_prompts():
+    """Reset all prompts to default values (useful after code updates)"""
+    from database import PromptRepository
+    prompt_repo = PromptRepository()
+    
+    if not prompt_repo.db_client.is_connected():
+        raise HTTPException(status_code=500, detail="Cannot connect to MongoDB")
+    
+    collection = prompt_repo.db_client.database[prompt_repo.collection_name]
+    
+    # Delete all existing prompts
+    result = collection.delete_many({})
+    deleted_count = result.deleted_count
+    
+    # Insert updated prompts from DEFAULT_PROMPTS
+    collection.insert_many(list(prompt_repo.DEFAULT_PROMPTS.values()))
+    inserted_count = len(prompt_repo.DEFAULT_PROMPTS)
+    
+    # Clear cache
+    prompt_repo._prompt_cache.clear()
+    
+    return {
+        "message": "All prompts reset to default values",
+        "deleted": deleted_count,
+        "inserted": inserted_count,
+        "prompts": list(prompt_repo.DEFAULT_PROMPTS.keys())
+    }
+
+
 @app.post("/generate-technical-test")
 async def generate_technical_test(profile_data: dict):
     """
