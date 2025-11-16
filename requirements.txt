@@ -1,6 +1,7 @@
 # Web Framework
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
+starlette==0.41.3
 
 # HTTP Client
 requests==2.32.3
@@ -23,3 +24,7 @@ python-dotenv==1.1.1
 
 # Utilities
 pydantic==2.11.9
+typing-extensions==4.12.2
+
+# Video Processing (already in Dockerfile via ffmpeg)
+# moviepy is not needed as we use ffmpeg directly

@@ -1,12 +1,19 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.middleware.gzip import GZipMiddleware
 from config import Config
 from services import VideoProcessor
 from services.ai_factory import AIServiceFactory
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 Config.validate()
 
 app = FastAPI(title="Video Profile Extractor API")
+
+# Add GZIP compression for faster responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 video_processor = VideoProcessor(
     sample_rate=Config.AUDIO_SAMPLE_RATE,
     channels=Config.AUDIO_CHANNELS
@@ -15,6 +22,9 @@ video_processor = VideoProcessor(
 # Use load balancer for intelligent task distribution
 ai_load_balancer = AIServiceFactory.create_load_balancer()
 print(f"[Load Balancer] Initialized with {len(ai_load_balancer.services)} services")
+
+# Thread pool for parallel AI operations
+executor = ThreadPoolExecutor(max_workers=3)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -93,14 +103,31 @@ async def upload_video(file: UploadFile = File(...)):
         # Process video and extract audio
         video_path, audio_path = video_processor.process_video(file)
         
-        # Transcribe audio (Groq - best for transcription)
-        transcription = ai_load_balancer.transcribe_audio(audio_path)
+        # Step 1: Transcribe audio (Groq - best for transcription)
+        loop = asyncio.get_event_loop()
+        transcription = await loop.run_in_executor(
+            executor,
+            ai_load_balancer.transcribe_audio,
+            audio_path
+        )
         
-        # Extract profile data (Groq - fast and accurate)
-        profile_data = ai_load_balancer.extract_profile(transcription)
+        # Step 2 & 3: Run profile extraction and CV generation in parallel
+        profile_task = loop.run_in_executor(
+            executor,
+            ai_load_balancer.extract_profile,
+            transcription
+        )
         
-        # Generate CV profile (Gemini - high quality text)
-        cv_profile = ai_load_balancer.generate_cv_profile(transcription, profile_data)
+        # Wait for profile extraction first
+        profile_data = await profile_task
+        
+        # Step 3: Generate CV profile (can start immediately after profile extraction)
+        cv_profile = await loop.run_in_executor(
+            executor,
+            ai_load_balancer.generate_cv_profile,
+            transcription,
+            profile_data
+        )
         
         return JSONResponse(content={
             "cv_profile": cv_profile,
@@ -184,8 +211,13 @@ async def generate_technical_test(profile_data: dict):
                 detail=f"Missing required fields: {', '.join(missing_fields)}"
             )
         
-        # Generate technical test (OpenRouter/Hugging Face - specialized for this task)
-        technical_test = ai_load_balancer.generate_technical_test(profile_data)
+        # Generate technical test asynchronously
+        loop = asyncio.get_event_loop()
+        technical_test = await loop.run_in_executor(
+            executor,
+            ai_load_balancer.generate_technical_test,
+            profile_data
+        )
         
         return JSONResponse(content={
             "technical_test_markdown": technical_test,

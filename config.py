@@ -17,14 +17,20 @@ class Config:
     AUDIO_SAMPLE_RATE = "16000"
     AUDIO_CHANNELS = "1"
     
-    # AI Model settings
-    GROQ_TRANSCRIPTION_MODEL = "whisper-large-v3"
-    GROQ_CHAT_MODEL = "llama-3.1-8b-instant"
-    GEMINI_MODEL = "gemini-2.0-flash"
-    GEMINI_FALLBACK_MODEL = "gemini-pro"
+    # AI Model settings (optimized for speed and reliability)
+    GROQ_TRANSCRIPTION_MODEL = "whisper-large-v3-turbo"  # Faster transcription
+    GROQ_CHAT_MODEL = "llama-3.3-70b-versatile"  # Better quality, still fast
+    GEMINI_MODEL = "gemini-1.5-flash"  # Stable model with good quota
+    GEMINI_FALLBACK_MODEL = "gemini-1.5-flash-8b"
     HUGGINGFACE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"
     OPENROUTER_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+    
+    # Performance settings
+    REQUEST_TIMEOUT = 60  # seconds
+    MAX_RETRIES = 2
+    ENABLE_CACHE = True
+    ENABLE_FALLBACK = True  # Auto fallback to other services on error
     
     # MongoDB settings
     MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")

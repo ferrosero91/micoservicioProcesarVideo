@@ -7,7 +7,8 @@ services:
     ports:
       - "${PORT:-9000}:9000"
     environment:
-      # AI Service Keys
+      # AI Service Keys (At least one required)
+      # Groq is primary service (best quota & speed)
       - GROQ_API_KEY=${GROQ_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
@@ -29,6 +30,15 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    # Resource limits (adjust based on traffic)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 30s

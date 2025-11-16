@@ -32,8 +32,8 @@ class AILoadBalancer:
         self.primary_services = {
             'transcription': 'groq',        # Best for audio transcription
             'profile_extraction': 'groq',   # Fast and accurate
-            'cv_generation': 'gemini',      # High quality text generation
-            'technical_test': 'openrouter'  # For company-generated tests
+            'cv_generation': 'groq',        # Changed to Groq (better quota than Gemini)
+            'technical_test': 'groq'        # Changed to Groq (more reliable)
         }
         self.fallback_order = ['groq', 'gemini', 'openrouter', 'huggingface']
     
@@ -71,25 +71,115 @@ class AILoadBalancer:
         raise RuntimeError(f"No service available for task: {task}")
     
     def transcribe_audio(self, audio_path: str) -> str:
-        """Route transcription to best service"""
+        """Route transcription to best service with fallback"""
         service = self.get_service_for_task('transcription')
         print(f"[Load Balancer] Using {type(service).__name__} for transcription")
-        return service.transcribe_audio(audio_path)
+        
+        try:
+            return service.transcribe_audio(audio_path)
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Load Balancer] Error with {type(service).__name__}: {error_msg}")
+            
+            # Try fallback for transcription (only Groq and Gemini support it)
+            if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                print(f"[Load Balancer] Attempting fallback for transcription...")
+                
+                for service_name in ['groq', 'gemini']:  # Only these support transcription
+                    if service_name in self.services:
+                        fallback_service = self.services[service_name]
+                        if fallback_service != service:
+                            try:
+                                print(f"[Load Balancer] Trying {type(fallback_service).__name__}...")
+                                return fallback_service.transcribe_audio(audio_path)
+                            except Exception as fallback_error:
+                                print(f"[Load Balancer] Fallback failed: {str(fallback_error)}")
+                                continue
+            
+            raise e
     
     def extract_profile(self, text: str) -> dict:
-        """Route profile extraction to best service"""
+        """Route profile extraction to best service with fallback"""
         service = self.get_service_for_task('profile_extraction')
         print(f"[Load Balancer] Using {type(service).__name__} for profile extraction")
-        return service.extract_profile(text)
+        
+        try:
+            return service.extract_profile(text)
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Load Balancer] Error with {type(service).__name__}: {error_msg}")
+            
+            # Try fallback services if quota exceeded or rate limit
+            if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                print(f"[Load Balancer] Attempting fallback for profile extraction...")
+                
+                for service_name in self.fallback_order:
+                    if service_name in self.services:
+                        fallback_service = self.services[service_name]
+                        if fallback_service != service:
+                            try:
+                                print(f"[Load Balancer] Trying {type(fallback_service).__name__}...")
+                                return fallback_service.extract_profile(text)
+                            except Exception as fallback_error:
+                                print(f"[Load Balancer] Fallback failed: {str(fallback_error)}")
+                                continue
+            
+            raise e
     
     def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
-        """Route CV generation to best service"""
+        """Route CV generation to best service with fallback"""
         service = self.get_service_for_task('cv_generation')
         print(f"[Load Balancer] Using {type(service).__name__} for CV generation")
-        return service.generate_cv_profile(transcription, profile_data)
+        
+        try:
+            return service.generate_cv_profile(transcription, profile_data)
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Load Balancer] Error with {type(service).__name__}: {error_msg}")
+            
+            # Try fallback services if quota exceeded or rate limit
+            if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                print(f"[Load Balancer] Attempting fallback for CV generation...")
+                
+                # Try other services in order
+                for service_name in self.fallback_order:
+                    if service_name in self.services:
+                        fallback_service = self.services[service_name]
+                        if fallback_service != service:  # Don't retry same service
+                            try:
+                                print(f"[Load Balancer] Trying {type(fallback_service).__name__}...")
+                                return fallback_service.generate_cv_profile(transcription, profile_data)
+                            except Exception as fallback_error:
+                                print(f"[Load Balancer] Fallback failed: {str(fallback_error)}")
+                                continue
+            
+            # If all fallbacks fail, raise original error
+            raise e
     
     def generate_technical_test(self, profile_data: dict) -> str:
-        """Route technical test generation to best service"""
+        """Route technical test generation to best service with fallback"""
         service = self.get_service_for_task('technical_test')
         print(f"[Load Balancer] Using {type(service).__name__} for technical test generation")
-        return service.generate_technical_test(profile_data)
+        
+        try:
+            return service.generate_technical_test(profile_data)
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Load Balancer] Error with {type(service).__name__}: {error_msg}")
+            
+            # Try fallback services if quota exceeded or rate limit
+            if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                print(f"[Load Balancer] Attempting fallback for technical test generation...")
+                
+                for service_name in self.fallback_order:
+                    if service_name in self.services:
+                        fallback_service = self.services[service_name]
+                        if fallback_service != service:
+                            try:
+                                print(f"[Load Balancer] Trying {type(fallback_service).__name__}...")
+                                return fallback_service.generate_technical_test(profile_data)
+                            except Exception as fallback_error:
+                                print(f"[Load Balancer] Fallback failed: {str(fallback_error)}")
+                                continue
+            
+            raise e

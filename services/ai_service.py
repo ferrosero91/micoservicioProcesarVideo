@@ -68,7 +68,9 @@ class GroqService(AIService):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
-                max_tokens=1000
+                max_tokens=1200,
+                top_p=0.9,
+                stream=False
             )
             
             response_text = response.choices[0].message.content.strip()
@@ -92,7 +94,9 @@ class GroqService(AIService):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
-                max_tokens=1500
+                max_tokens=1800,
+                top_p=0.95,
+                stream=False
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
@@ -116,7 +120,9 @@ class GroqService(AIService):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.4,
-                max_tokens=2500
+                max_tokens=4000,
+                top_p=0.95,
+                stream=False
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
