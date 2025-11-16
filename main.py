@@ -9,7 +9,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 Config.validate()
 
-app = FastAPI(title="Video Profile Extractor API")
+app = FastAPI(
+    title="Video Profile Extractor API",
+    version="1.0.1"
+)
 
 # Add GZIP compression for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)

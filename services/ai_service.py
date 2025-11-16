@@ -61,22 +61,43 @@ class GroqService(AIService):
         prompt = self.prompt_repo.get_prompt_with_variables("profile_extraction", text=text)
         
         try:
-            response = self.client.chat.completions.create(
-                model=Config.GROQ_CHAT_MODEL,
-                messages=[
-                    {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1,
-                max_tokens=1200,
-                top_p=0.9,
-                stream=False,
-                response_format={"type": "json_object"}
-            )
+            try:
+                response = self.client.chat.completions.create(
+                    model=Config.GROQ_CHAT_MODEL,
+                    messages=[
+                        {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.1,
+                    max_tokens=1200,
+                    top_p=0.9,
+                    stream=False,
+                    response_format={"type": "json_object"}
+                )
+            except Exception as e:
+                # Fallback without response_format if not supported
+                if "response_format" in str(e).lower() or "not supported" in str(e).lower():
+                    response = self.client.chat.completions.create(
+                        model=Config.GROQ_CHAT_MODEL,
+                        messages=[
+                            {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.1,
+                        max_tokens=1200,
+                        top_p=0.9,
+                        stream=False
+                    )
+                else:
+                    raise
             
             response_text = response.choices[0].message.content.strip()
-            return self._parse_json_response(response_text)
+            print(f"[Groq] Raw response (first 200 chars): {response_text[:200]}")
+            parsed = self._parse_json_response(response_text)
+            print(f"[Groq] Successfully parsed JSON with keys: {list(parsed.keys())}")
+            return parsed
         except Exception as e:
+            print(f"[Groq] Profile extraction failed: {str(e)}")
             raise Exception(f"Groq profile extraction error: {str(e)}")
     
     def generate_cv_profile(self, transcription: str, profile_data: dict) -> str:
