@@ -106,8 +106,10 @@ class AILoadBalancer:
         try:
             return service.extract_profile(text)
         except Exception as e:
+            import traceback
             error_msg = str(e)
             print(f"[Load Balancer] Error with {type(service).__name__}: {error_msg}")
+            print(f"[Load Balancer] Full traceback:\n{traceback.format_exc()}")
             
             # Try fallback services if quota exceeded or rate limit
             if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
