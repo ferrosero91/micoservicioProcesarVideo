@@ -64,13 +64,14 @@ class GroqService(AIService):
             response = self.client.chat.completions.create(
                 model=Config.GROQ_CHAT_MODEL,
                 messages=[
-                    {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. Always respond with valid JSON only."},
+                    {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
                 max_tokens=1200,
                 top_p=0.9,
-                stream=False
+                stream=False,
+                response_format={"type": "json_object"}
             )
             
             response_text = response.choices[0].message.content.strip()
@@ -131,10 +132,26 @@ class GroqService(AIService):
     @staticmethod
     def _parse_json_response(response_text: str) -> dict:
         """Parse JSON from AI response"""
+        # Remove markdown code blocks if present
+        response_text = re.sub(r'```json\s*', '', response_text)
+        response_text = re.sub(r'```\s*', '', response_text)
+        response_text = response_text.strip()
+        
+        # Try to parse directly first
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            pass
+        
+        # Try to find JSON object in the response
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
         if json_match:
-            return json.loads(json_match.group())
-        raise ValueError("No valid JSON found in response")
+            try:
+                return json.loads(json_match.group())
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in response: {str(e)}\nResponse: {response_text[:200]}")
+        
+        raise ValueError(f"No valid JSON found in response: {response_text[:200]}")
 
 
 class GeminiService(AIService):

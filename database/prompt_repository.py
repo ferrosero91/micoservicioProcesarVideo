@@ -20,8 +20,7 @@ class PromptRepository:
                 "2. **Professional Depth:** Provide detailed, specific descriptions rather than generic statements\n"
                 "3. **Intelligent Inference:** When information is implicit, use professional context to infer logically\n"
                 "4. **Structured Output:** Maintain strict JSON format with complete, well-formed sentences\n\n"
-                "**Required JSON Structure:**\n"
-                "```json\n"
+                "**Required JSON Structure (return ONLY this JSON, NO markdown, NO code blocks):**\n"
                 "{\n"
                 '  "name": "Complete full name (First and Last name)",\n'
                 '  "profession": "Specific job title or professional role (e.g., Senior Full-Stack Developer, Data Scientist, DevOps Engineer)",\n'
@@ -31,8 +30,7 @@ class PromptRepository:
                 '  "languages": "Spoken languages with proficiency levels when mentioned (e.g., Spanish - Native, English - Advanced/C1, French - Intermediate/B2). If proficiency not stated, indicate as \'mentioned\'.",\n'
                 '  "achievements": "Specific accomplishments with measurable impact when possible: awards received, recognition from employers/clients, successful project outcomes, performance metrics (e.g., \'reduced deployment time by 40%\', \'led team of 5 developers\'), publications, conference talks, open-source contributions, or any notable professional milestones.",\n'
                 '  "soft_skills": "Interpersonal and professional competencies: leadership abilities, communication skills, teamwork, problem-solving approach, adaptability, time management, mentoring experience, stakeholder management, presentation skills, analytical thinking, creativity, and any personality traits that enhance professional performance."\n'
-                "}\n"
-                "```\n\n"
+                "}\n\n"
                 "**Extraction Guidelines by Field:**\n\n"
                 "**Name:**\n"
                 "- Extract complete name as stated\n"
@@ -75,15 +73,17 @@ class PromptRepository:
                 "- Infer from context: if mentions \"led team\" → leadership, if mentions \"client presentations\" → communication\n"
                 "- Include work style preferences if mentioned (collaborative, autonomous, detail-oriented)\n"
                 "- Note any passion areas or professional interests\n\n"
-                "**Important Rules:**\n"
-                "- Return ONLY valid JSON, no markdown code blocks, no explanations\n"
+                "**CRITICAL OUTPUT RULES:**\n"
+                "- Return ONLY the raw JSON object - NO markdown, NO ```json``` blocks, NO explanations, NO additional text\n"
+                "- Start your response directly with { and end with }\n"
                 "- Use complete sentences, not bullet points or fragments\n"
                 "- Use \"Not explicitly mentioned\" instead of \"Not specified\" when appropriate\n"
                 "- Maintain professional, formal language throughout\n"
-                "- Ensure all JSON strings are properly escaped\n"
-                "- Do not invent information; if uncertain, indicate inference clearly\n\n"
+                "- Ensure all JSON strings are properly escaped (use \\ for quotes inside strings)\n"
+                "- Do not invent information; if uncertain, indicate inference clearly\n"
+                "- Your entire response must be valid, parseable JSON\n\n"
                 "**Text to analyze:**\n{text}\n\n"
-                "**Output:** Return the JSON object directly."
+                "**Output:** Return ONLY the JSON object, starting with { and ending with }. No other text."
             ),
             "variables": ["text"]
         },
