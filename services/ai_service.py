@@ -152,7 +152,7 @@ class GroqService(AIService):
     
     @staticmethod
     def _parse_json_response(response_text: str) -> dict:
-        """Parse JSON from AI response"""
+        """Parse JSON from AI response with robust error handling"""
         # Remove markdown code blocks if present
         response_text = re.sub(r'```json\s*', '', response_text)
         response_text = re.sub(r'```\s*', '', response_text)
@@ -161,18 +161,29 @@ class GroqService(AIService):
         # Try to parse directly first
         try:
             return json.loads(response_text)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as e:
+            print(f"[JSON Parser] Direct parse failed: {str(e)}")
+            print(f"[JSON Parser] Response text (first 300 chars): {response_text[:300]}")
         
-        # Try to find JSON object in the response
+        # Try to find JSON object in the response (greedy match)
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
         if json_match:
+            json_str = json_match.group()
             try:
-                return json.loads(json_match.group())
+                return json.loads(json_str)
             except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON in response: {str(e)}\nResponse: {response_text[:200]}")
+                print(f"[JSON Parser] Regex match parse failed: {str(e)}")
+                print(f"[JSON Parser] Matched JSON (first 300 chars): {json_str[:300]}")
+                
+                # Try to fix common issues
+                # Remove trailing commas before closing braces
+                json_str_fixed = re.sub(r',(\s*[}\]])', r'\1', json_str)
+                try:
+                    return json.loads(json_str_fixed)
+                except json.JSONDecodeError:
+                    raise ValueError(f"Invalid JSON in response: {str(e)}\nResponse: {response_text[:300]}")
         
-        raise ValueError(f"No valid JSON found in response: {response_text[:200]}")
+        raise ValueError(f"No valid JSON found in response: {response_text[:300]}")
 
 
 class GeminiService(AIService):
