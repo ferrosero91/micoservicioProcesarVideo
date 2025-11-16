@@ -1,6 +1,11 @@
-# Video Profile Extractor API
+# 🎥 Video Profile Extractor API
 
-API for extracting professional profiles from video presentations using AI transcription and analysis.
+AI-powered API for job recruitment platforms that extracts professional profiles from video presentations and generates customized technical tests.
+
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
 ## Features
 
@@ -31,9 +36,19 @@ The application follows Object-Oriented Programming principles with clear separa
 └── COOLIFY_DEPLOYMENT.md      # Complete Coolify deployment guide
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### Local Development with Docker Compose
+### Option 1: Deploy to Coolify (Recommended)
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete Coolify deployment guide.
+
+**Quick Steps:**
+1. Create MongoDB in Coolify
+2. Create Docker Compose resource
+3. Set environment variables
+4. Deploy
+
+### Option 2: Local Development with Docker Compose
 
 ```bash
 # Clone repository
@@ -51,21 +66,17 @@ docker-compose up -d
 open http://localhost:9000
 ```
 
-### Local Development without Docker
+### Option 3: Local Development without Docker
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure .env (leave MongoDB credentials empty for local)
-GROQ_API_KEY=your_key
-GEMINI_API_KEY=your_key
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
-MONGODB_USERNAME=
-MONGODB_PASSWORD=
+# Configure .env
+cp .env.example .env
+# Edit with your API keys
 
-# Start MongoDB
+# Start MongoDB (if using local)
 net start MongoDB  # Windows
 # or
 sudo systemctl start mongod  # Linux/Mac

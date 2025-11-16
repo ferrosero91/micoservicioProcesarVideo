@@ -12,31 +12,54 @@ env/
 # Environment
 .env
 .env.local
+.env.*.local
 
 # Git
 .git/
 .gitignore
+.gitattributes
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+.DS_Store
 
 # Documentation
 *.md
 !README.md
+!DEPLOYMENT.md
 
 # Tests
 tests/
 test_*.py
+*_test.py
+pytest.ini
+.pytest_cache/
 
 # Temporary files
 *.log
 *.tmp
 temp/
 tmp/
+*.bak
 
 # OS
-.DS_Store
 Thumbs.db
+desktop.ini
+
+# Development
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Local MongoDB data
+mongodb_data/
+data/
+
+# Scripts (keep only necessary ones)
+scripts/view_prompts.py
+scripts/init_prompts.py
