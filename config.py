@@ -23,7 +23,7 @@ class Config:
     GEMINI_MODEL = "gemini-2.0-flash"
     GEMINI_FALLBACK_MODEL = "gemini-pro"
     HUGGINGFACE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"
-    OPENROUTER_MODEL = "google/gemma-2-9b-it:free"
+    OPENROUTER_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     
     # MongoDB settings
