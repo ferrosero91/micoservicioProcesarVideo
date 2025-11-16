@@ -65,7 +65,7 @@ class GroqService(AIService):
                 response = self.client.chat.completions.create(
                     model=Config.GROQ_CHAT_MODEL,
                     messages=[
-                        {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
+                        {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond in SPANISH. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON. ALL field values must be in SPANISH."},
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.1,
@@ -80,7 +80,7 @@ class GroqService(AIService):
                     response = self.client.chat.completions.create(
                         model=Config.GROQ_CHAT_MODEL,
                         messages=[
-                            {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
+                            {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond in SPANISH. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON. ALL field values must be in SPANISH."},
                             {"role": "user", "content": prompt}
                         ],
                         temperature=0.1,
