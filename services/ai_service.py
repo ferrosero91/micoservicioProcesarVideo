@@ -48,7 +48,7 @@ class GroqService(AIService):
                 transcription = self.client.audio.transcriptions.create(
                     file=(audio_path, file.read()),
                     model=Config.GROQ_TRANSCRIPTION_MODEL,
-                    prompt="Transcribe this audio in Spanish. It's a personal or professional presentation.",
+                    prompt="Transcribe this audio. It's a personal or professional presentation.",
                     response_format="text",
                     language="es"
                 )
@@ -80,7 +80,7 @@ class GroqService(AIService):
                     response = self.client.chat.completions.create(
                         model=Config.GROQ_CHAT_MODEL,
                         messages=[
-                            {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond in SPANISH. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON. ALL field values must be in SPANISH."},
+                            {"role": "system", "content": "You are an assistant that extracts professional profile information from transcribed texts. You MUST respond with ONLY valid JSON. Do NOT use markdown code blocks. Do NOT add any text before or after the JSON. Start your response with { and end with }. Your entire response must be parseable JSON."},
                             {"role": "user", "content": prompt}
                         ],
                         temperature=0.1,
@@ -208,7 +208,7 @@ class GeminiService(AIService):
         try:
             audio_file = self.genai.upload_file(audio_path)
             response = self.model.generate_content([
-                "Transcribe this audio in Spanish. Provide only the speech transcription, without additional comments or special formatting.",
+                "Transcribe this audio. Provide only the speech transcription, without additional comments or special formatting.",
                 audio_file
             ])
             return response.text.strip() if response.text else "Unable to transcribe audio."
